@@ -237,7 +237,7 @@ public abstract class AbstractPojoTester {
 
 			// see if a static method would create an instance of this
 			for (Method method : propertyType.getDeclaredMethods()) {
-				if (Modifier.isStatic(method.getModifiers()) && propertyType.isAssignableFrom( method.getReturnType() )) {
+				if (Modifier.isPublic(method.getModifiers()) && Modifier.isStatic(method.getModifiers()) && propertyType.isAssignableFrom( method.getReturnType() )) {
 					try {
 						return createInstance(method);
 					}  catch (NoSuchMethodException ex2) {
