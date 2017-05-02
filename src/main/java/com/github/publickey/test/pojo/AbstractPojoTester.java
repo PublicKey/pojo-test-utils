@@ -5,6 +5,7 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.MethodDescriptor;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -95,53 +96,48 @@ public abstract class AbstractPojoTester {
 	 * Invoke all constructors and specified methods
 	 * @param pojoClass
 	 * @param invokeMethods
-	 * @throws RuntimeException
+	 * @throws Exception 
 	 */
 	@SuppressWarnings("unchecked")
-	protected <T> T[] testPojoAllConstructors(Class<T> pojoClass, String... methods) throws RuntimeException {
-		
-		try {
-			boolean foundOne = false;
+	protected <T> T[] testPojoAllConstructors(Class<T> pojoClass, String... methods) throws Exception {
+		boolean foundOne = false;
 			
-			if (pojoClass.isEnum()) {
-				Object[] enums = pojoClass.getEnumConstants();
-				for (Object enumConstant : enums) {
-					testEnum(pojoClass, enumConstant, methods);
-				}
-
-				try {
-					Method method = pojoClass.getMethod("values");
-					Object[] actual = (Object[])method.invoke(null);
-					Assert.assertArrayEquals("Enum " + pojoClass + "." + enums + " does not match " + actual, enums, actual);
-				} catch (NoSuchMethodException ex) {
-					logger.warning("No values method found in the Enum " + pojoClass);
-				}
-				
-				return (T[])enums;
-			} else {
-				List<Object> generatedObjects = new ArrayList<>();
-				
-				for (Constructor<?> constructor : pojoClass.getConstructors()) {
-					try {
-						Object obj = createInstance(constructor);
-						generatedObjects.add(obj);
-
-						testPojo(pojoClass, obj, methods);
-	
-						foundOne = true;
-					} catch (NoSuchMethodException ex2) {
-						// skipping this constructor
-					}
-				}
-				
-				if (!foundOne) {
-					throw new InstantiationException("Unable to create any instances of " + pojoClass.getSimpleName());
-				}
-				
-				return (T[])generatedObjects.toArray();
+		if (pojoClass.isEnum()) {
+			Object[] enums = pojoClass.getEnumConstants();
+			for (Object enumConstant : enums) {
+				testEnum(pojoClass, enumConstant, methods);
 			}
-		} catch(Exception e) {
-			throw new RuntimeException(e);
+
+			try {
+				Method method = pojoClass.getMethod("values");
+				Object[] actual = (Object[])method.invoke(null);
+				Assert.assertArrayEquals("Enum " + pojoClass + "." + enums + " does not match " + actual, enums, actual);
+			} catch (NoSuchMethodException ex) {
+				logger.warning("No values method found in the Enum " + pojoClass);
+			}
+			
+			return (T[])enums;
+		} else {
+			List<Object> generatedObjects = new ArrayList<>();
+			
+			for (Constructor<?> constructor : pojoClass.getConstructors()) {
+				try {
+					Object obj = createInstance(constructor);
+					generatedObjects.add(obj);
+
+					testPojo(pojoClass, obj, methods);
+
+					foundOne = true;
+				} catch (NoSuchMethodException ex2) {
+					// skipping this constructor
+				}
+			}
+			
+			if (!foundOne) {
+				throw new InstantiationException("Unable to create any instances of " + pojoClass.getSimpleName());
+			}
+			
+			return (T[])generatedObjects.toArray();
 		}
 	}
 
@@ -213,6 +209,14 @@ public abstract class AbstractPojoTester {
 			} else {
 				throw new NoSuchMethodException("Enum type " + propertyType + " has no constants");
 			}
+		} else if (propertyType.isArray()) {
+            // create array with single element
+		    Class<?> componentType = propertyType.getComponentType();
+		    Object array = Array.newInstance(componentType, 1);
+            Object instance = lookupOrCreateObject(componentType);
+            Array.set(array, 0, instance);
+
+            return array;
 		}
 		
 		try {
