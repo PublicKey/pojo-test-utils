@@ -43,7 +43,7 @@ public abstract class AbstractPojoTester {
 	protected <T> void putTestValue(Class<T> propertyType, T testValue) {
 		testValues.put(propertyType, () -> testValue);
 	}
-	
+
 	protected <T> void putTestValueSupplier(Class<T> propertyType, Supplier<T> testValue) {
 		testValues.put(propertyType, testValue);
 	}
@@ -71,22 +71,25 @@ public abstract class AbstractPojoTester {
 
 	/**
 	 * Call from subclass
-	 * @throws InvocationTargetException 
-	 * @throws IllegalAccessException 
-	 * @throws InstantiationException 
-	 * @throws NoSuchMethodException 
-	 * @throws IntrospectionException 
-	 * @throws SecurityException 
-	 * @throws NoSuchFieldException 
+	 * 
+	 * @throws InvocationTargetException
+	 * @throws IllegalAccessException
+	 * @throws InstantiationException
+	 * @throws NoSuchMethodException
+	 * @throws IntrospectionException
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
 	 */
-	protected <T> T testPojo(Class<T> pojoClass, String... methods) throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IntrospectionException, NoSuchFieldException, SecurityException {
+	protected <T> T testPojo(Class<T> pojoClass, String... methods)
+			throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException,
+			IntrospectionException, NoSuchFieldException, SecurityException {
 		try {
 			T pojo = pojoClass.cast(createObject(pojoClass));
 			testPojo(pojoClass, pojo, methods);
 			return pojo;
 		} catch (InvocationTargetException ex) {
 			if (ex.getTargetException() instanceof RuntimeException) {
-				throw (RuntimeException)ex.getTargetException();
+				throw (RuntimeException) ex.getTargetException();
 			}
 			throw ex;
 		}
@@ -94,14 +97,15 @@ public abstract class AbstractPojoTester {
 
 	/**
 	 * Invoke all constructors and specified methods
+	 * 
 	 * @param pojoClass
 	 * @param invokeMethods
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	@SuppressWarnings("unchecked")
 	protected <T> T[] testPojoAllConstructors(Class<T> pojoClass, String... methods) throws Exception {
 		boolean foundOne = false;
-			
+
 		if (pojoClass.isEnum()) {
 			Object[] enums = pojoClass.getEnumConstants();
 			for (Object enumConstant : enums) {
@@ -110,16 +114,17 @@ public abstract class AbstractPojoTester {
 
 			try {
 				Method method = pojoClass.getMethod("values");
-				Object[] actual = (Object[])method.invoke(null);
-				Assert.assertArrayEquals("Enum " + pojoClass + "." + enums + " does not match " + actual, enums, actual);
+				Object[] actual = (Object[]) method.invoke(null);
+				Assert.assertArrayEquals("Enum " + pojoClass + "." + enums + " does not match " + actual, enums,
+						actual);
 			} catch (NoSuchMethodException ex) {
 				logger.warning("No values method found in the Enum " + pojoClass);
 			}
-			
-			return (T[])enums;
+
+			return (T[]) enums;
 		} else {
 			List<Object> generatedObjects = new ArrayList<>();
-			
+
 			for (Constructor<?> constructor : pojoClass.getConstructors()) {
 				try {
 					Object obj = createInstance(constructor);
@@ -132,12 +137,12 @@ public abstract class AbstractPojoTester {
 					// skipping this constructor
 				}
 			}
-			
+
 			if (!foundOne) {
 				throw new InstantiationException("Unable to create any instances of " + pojoClass.getSimpleName());
 			}
-			
-			return (T[])generatedObjects.toArray();
+
+			return (T[]) generatedObjects.toArray();
 		}
 	}
 
@@ -145,40 +150,43 @@ public abstract class AbstractPojoTester {
 		testPojo(pojoClass, enumConstant, methods);
 		try {
 			Method method = pojoClass.getMethod("valueOf", String.class);
-	
-			String enumName = ((Enum<?>)enumConstant).name();
-	
+
+			String enumName = ((Enum<?>) enumConstant).name();
+
 			Object result = method.invoke(enumConstant, enumName);
 			Assert.assertEquals(enumConstant, result);
 		} catch (NoSuchMethodException ex) {
 			logger.warning("No valueOf method found in the Enum " + pojoClass);
 		}
 	}
-	
+
 	/**
-	 * Run automated accessors, equals tests, call from subclass, as well as try to invoke all specified methods
+	 * Run automated accessors, equals tests, call from subclass, as well as try
+	 * to invoke all specified methods
 	 * 
 	 * @param pojoClass
 	 * @param pojoInstance
 	 * @param invokeMethods
-	 * @throws IntrospectionException 
-	 * @throws SecurityException 
-	 * @throws NoSuchFieldException 
-	 * @throws InvocationTargetException 
-	 * @throws IllegalAccessException 
-	 * @throws InstantiationException 
-	 * @throws NoSuchMethodException 
+	 * @throws IntrospectionException
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws InvocationTargetException
+	 * @throws IllegalAccessException
+	 * @throws InstantiationException
+	 * @throws NoSuchMethodException
 	 * @throws Exception
 	 */
-	protected void testPojo(Class<?> pojoClass, Object pojoInstance, String... methods) throws IntrospectionException, NoSuchFieldException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+	protected void testPojo(Class<?> pojoClass, Object pojoInstance, String... methods)
+			throws IntrospectionException, NoSuchFieldException, SecurityException, InstantiationException,
+			IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 		BeanInfo pojoInfo = Introspector.getBeanInfo(pojoClass, pojoClass.getSuperclass());
 		for (PropertyDescriptor propertyDescriptor : pojoInfo.getPropertyDescriptors()) {
 			testProperty(pojoInstance, propertyDescriptor);
 		}
-		
+
 		List<String> patternsLeft = new ArrayList<String>();
 		patternsLeft.addAll(Arrays.asList(methods));
-		
+
 		if (methods != null && methods.length > 0) {
 			for (MethodDescriptor methodDescriptor : pojoInfo.getMethodDescriptors()) {
 				for (String methodName : methods) {
@@ -188,10 +196,10 @@ public abstract class AbstractPojoTester {
 						break;
 					}
 				}
-				
+
 			}
 		}
-		
+
 		Assert.assertTrue("Instance is null", pojoInstance != null);
 		Assert.assertTrue("self equals is not valid", pojoInstance.equals(pojoInstance));
 		Assert.assertEquals("Hash code is not valid", pojoInstance.hashCode(), pojoInstance.hashCode());
@@ -201,7 +209,8 @@ public abstract class AbstractPojoTester {
 		Assert.assertTrue("Not all methods invoked: " + patternsLeft, patternsLeft.isEmpty());
 	}
 
-	private Object createObject(Class<?> propertyType) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	private Object createObject(Class<?> propertyType) throws NoSuchMethodException, InstantiationException,
+			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		if (propertyType.isEnum()) {
 			Object[] enums = propertyType.getEnumConstants();
 			if (enums.length > 0) {
@@ -210,15 +219,15 @@ public abstract class AbstractPojoTester {
 				throw new NoSuchMethodException("Enum type " + propertyType + " has no constants");
 			}
 		} else if (propertyType.isArray()) {
-            // create array with single element
-		    Class<?> componentType = propertyType.getComponentType();
-		    Object array = Array.newInstance(componentType, 1);
-            Object instance = lookupOrCreateObject(componentType);
-            Array.set(array, 0, instance);
+			// create array with single element
+			Class<?> componentType = propertyType.getComponentType();
+			Object array = Array.newInstance(componentType, 1);
+			Object instance = lookupOrCreateObject(componentType);
+			Array.set(array, 0, instance);
 
-            return array;
+			return array;
 		}
-		
+
 		try {
 			// first try to use default constructor
 			Constructor<?> constructor = propertyType.getConstructor();
@@ -226,7 +235,6 @@ public abstract class AbstractPojoTester {
 		} catch (NoSuchMethodException ex) {
 			// try to find constructor that we can invoke
 
-			
 			for (Constructor<?> constructor : propertyType.getConstructors()) {
 				try {
 					return createInstance(constructor);
@@ -237,41 +245,49 @@ public abstract class AbstractPojoTester {
 
 			// see if a static method would create an instance of this
 			for (Method method : propertyType.getDeclaredMethods()) {
-				if (Modifier.isPublic(method.getModifiers()) && Modifier.isStatic(method.getModifiers()) && propertyType.isAssignableFrom( method.getReturnType() )) {
+				if (Modifier.isPublic(method.getModifiers()) && Modifier.isStatic(method.getModifiers())
+						&& propertyType.isAssignableFrom(method.getReturnType())) {
 					try {
 						return createInstance(method);
-					}  catch (NoSuchMethodException ex2) {
-						 // skipping this method
+					} catch (NoSuchMethodException ex2) {
+						// skipping this method
 					}
 				}
 			}
 			// none of the constructors matched
-			throw new NoSuchMethodException("Unable to find any supported constructor for " + propertyType.getSimpleName());
+			throw new NoSuchMethodException(
+					"Unable to find any supported constructor for " + propertyType.getSimpleName());
 		}
 	}
 
-	private Object createInstance(Constructor<?> constructor) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+	private Object createInstance(Constructor<?> constructor)
+			throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 		Type[] parameterTypes = constructor.getGenericParameterTypes();
-		
+
 		Object[] arguments = lookupOrCreateArguments(parameterTypes);
-		
+
+		if (constructor.isAccessible()) {
+			constructor.setAccessible(true);
+		}
 		// no exception was thrown, so let's try to create the instance
 		return constructor.newInstance(arguments);
 	}
 
-	private Object createInstance(Method constructorMethod) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+	private Object createInstance(Method constructorMethod)
+			throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 		Type[] parameterTypes = constructorMethod.getGenericParameterTypes();
-		
+
 		Object[] arguments = lookupOrCreateArguments(parameterTypes);
-		
+
 		// no exception was thrown, so let's try to create the instance
 		return constructorMethod.invoke(null, arguments);
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	private Collection<Object> createCollectionFrom(Class<?> argumentClass) throws InstantiationException, IllegalAccessException {
+	private Collection<Object> createCollectionFrom(Class<?> argumentClass)
+			throws InstantiationException, IllegalAccessException {
 		if (!Modifier.isAbstract(argumentClass.getModifiers())) {
-			return (Collection<Object>)argumentClass.newInstance();
+			return (Collection<Object>) argumentClass.newInstance();
 		} else if (List.class.isAssignableFrom(argumentClass)) {
 			return new ArrayList<>();
 		} else if (Set.class.isAssignableFrom(argumentClass)) {
@@ -282,113 +298,113 @@ public abstract class AbstractPojoTester {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Map<Object, Object> createMapFrom(Class<?> argumentClass) throws InstantiationException, IllegalAccessException {
+	private Map<Object, Object> createMapFrom(Class<?> argumentClass)
+			throws InstantiationException, IllegalAccessException {
 		if (!Modifier.isAbstract(argumentClass.getModifiers())) {
-			return (Map<Object, Object>)argumentClass.newInstance();
+			return (Map<Object, Object>) argumentClass.newInstance();
 		} else if (Map.class.isAssignableFrom(argumentClass)) {
-			return new HashMap<>(); 
+			return new HashMap<>();
 		} else {
 			throw new InstantiationException("Unable to instantiate collection " + argumentClass);
 		}
 	}
-	
-	private Object[] lookupOrCreateArguments(Type[] argumentTypes) throws InstantiationException,
-															IllegalAccessException,
-															NoSuchMethodException,
-															InvocationTargetException {
+
+	private Object[] lookupOrCreateArguments(Type[] argumentTypes)
+			throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
 		Object[] arguments = new Object[argumentTypes.length];
-		
+
 		// loop over all arguments and see if we have a test value
 		for (int index = 0; index < argumentTypes.length; index++) {
 			Type type = argumentTypes[index];
-			
+
 			arguments[index] = lookupOrCreateArgument(type);
 		}
 		return arguments;
 	}
 
-	private Object lookupOrCreateArgument(Type type) throws InstantiationException,
-													 IllegalAccessException,
-													 NoSuchMethodException,
-													 InvocationTargetException {
+	private Object lookupOrCreateArgument(Type type)
+			throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
 		Object argument;
 		if (type instanceof ParameterizedType) {
 			ParameterizedType parameterizedType = (ParameterizedType) type;
-			Class<?> argumentClass = (Class<?>)parameterizedType.getRawType();
-			
+			Class<?> argumentClass = (Class<?>) parameterizedType.getRawType();
+
 			if (Collection.class.isAssignableFrom(argumentClass)) {
 				Collection<Object> collection = createCollectionFrom(argumentClass);
 
-				Type[] rawTypes = ((ParameterizedType)type).getActualTypeArguments();
-				
-				collection.add( lookupOrCreateObject(rawTypes[0]) );
-				collection.add( lookupOrCreateObject(rawTypes[0]) );
-				
+				Type[] rawTypes = ((ParameterizedType) type).getActualTypeArguments();
+
+				collection.add(lookupOrCreateObject(rawTypes[0]));
+				collection.add(lookupOrCreateObject(rawTypes[0]));
+
 				argument = collection;
 			} else if (Map.class.isAssignableFrom(argumentClass)) {
 				Map<Object, Object> map = createMapFrom(argumentClass);
-				Type[] rawTypes = ((ParameterizedType)type).getActualTypeArguments();
+				Type[] rawTypes = ((ParameterizedType) type).getActualTypeArguments();
 				Type rawKey = rawTypes[0];
 				Type rawValue = rawTypes[1];
-				
+
 				Object key = lookupOrCreateObject(rawKey);
 				Object value = lookupOrCreateObject(rawValue);
-				
+
 				map.put(key, value);
 				argument = map;
 			} else {
 				argument = createObject(argumentClass);
 			}
-		
+
 		} else {
 			argument = lookupOrCreateObject(type);
 		}
 		return argument;
 	}
 
-	private Object lookupOrCreateObject(Type rawKey) throws NoSuchMethodException,
-											   InstantiationException,
-											   IllegalAccessException,
-											   InvocationTargetException {
+	private Object lookupOrCreateObject(Type rawKey)
+			throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
 		Object key;
 		if (testValues.containsKey(rawKey)) {
-			key = testValues.get((Class<?>)rawKey).get();
+			key = testValues.get((Class<?>) rawKey).get();
 		} else {
-			key = createObject((Class<?>)rawKey);
+			key = createObject((Class<?>) rawKey);
 		}
 		return key;
 	}
-	
-	private void testMethod(Object pojo, MethodDescriptor methodDescriptor) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+
+	private void testMethod(Object pojo, MethodDescriptor methodDescriptor)
+			throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 		try {
 			Object response = invokeMethod(pojo, methodDescriptor.getMethod());
-			
-			logger.info("Invoked custom method: " + pojo.getClass().getSimpleName() + "." + methodDescriptor.getName() + " = " + response);
+
+			logger.info("Invoked custom method: " + pojo.getClass().getSimpleName() + "." + methodDescriptor.getName()
+					+ " = " + response);
 		} catch (IllegalArgumentException ex) {
-			logger.log(Level.WARNING, "Skipping method: " + methodDescriptor.getMethod() + " due to " + ex.getMessage(), ex);
+			logger.log(Level.WARNING, "Skipping method: " + methodDescriptor.getMethod() + " due to " + ex.getMessage(),
+					ex);
 		}
 	}
-	
-	private void testProperty(Object pojo, PropertyDescriptor propertyDescriptor) throws NoSuchFieldException, SecurityException, InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+
+	private void testProperty(Object pojo, PropertyDescriptor propertyDescriptor)
+			throws NoSuchFieldException, SecurityException, InstantiationException, IllegalAccessException,
+			NoSuchMethodException, InvocationTargetException {
 		Class<?> propertyType = propertyDescriptor.getPropertyType();
 
 		Method writeMethod = propertyDescriptor.getWriteMethod();
 		Method readMethod = propertyDescriptor.getReadMethod();
-		
+
 		if (readMethod == null) {
 			try {
-				readMethod = pojo.getClass().getMethod(
-						"is" + Character.toUpperCase(propertyDescriptor.getName().charAt(0)) + propertyDescriptor.getName().substring(1),
-						(Class<?> []) null);
-			}
-			catch (NoSuchMethodException x) {
-				logger.info("wanted is" + Character.toUpperCase(propertyDescriptor.getName().charAt(0)) + propertyDescriptor.getName().substring(1));
+				readMethod = pojo.getClass()
+						.getMethod("is" + Character.toUpperCase(propertyDescriptor.getName().charAt(0))
+								+ propertyDescriptor.getName().substring(1), (Class<?>[]) null);
+			} catch (NoSuchMethodException x) {
+				logger.info("wanted is" + Character.toUpperCase(propertyDescriptor.getName().charAt(0))
+						+ propertyDescriptor.getName().substring(1));
 			}
 		}
-		
+
 		if (readMethod != null && writeMethod != null) {
 			Object testValue = null;
-			
+
 			if (propertyType == List.class) {
 				// http://www.coderanch.com/t/383648/java/java/java-reflection-element-type-List
 				Field field = pojo.getClass().getDeclaredField(propertyDescriptor.getName());
@@ -397,13 +413,12 @@ public abstract class AbstractPojoTester {
 					ParameterizedType pType = (ParameterizedType) fieldType;
 					testValue = lookupOrCreateArgument(pType);
 				}
-			}
-			else {
+			} else {
 				if (testValues.containsKey(propertyType)) {
 					testValue = testValues.get(propertyType).get();
 				}
 			}
-			
+
 			if (testValue == null) {
 				try {
 					testValue = createObject(propertyType);
@@ -411,28 +426,30 @@ public abstract class AbstractPojoTester {
 					logger.warning(ex.getMessage());
 				}
 			}
-			
+
 			if (testValue == null) {
 				return;
 			}
-			
+
 			writeMethod.invoke(pojo, testValue);
-			Assert.assertEquals(propertyDescriptor.getPropertyType() + "." + propertyDescriptor.getName() + " property failed", readMethod.invoke(pojo), testValue);
+			Assert.assertEquals(
+					propertyDescriptor.getPropertyType() + "." + propertyDescriptor.getName() + " property failed",
+					readMethod.invoke(pojo), testValue);
 		} else if (readMethod != null) {
 			Object object = readMethod.invoke(pojo);
 			logger.info("Getter " + pojo.getClass().getSimpleName() + "." + readMethod.getName() + " = " + object);
-			
+
 		}
 	}
-	
 
-	private Object invokeMethod(Object pojo, Method method) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+	private Object invokeMethod(Object pojo, Method method)
+			throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 		Type[] parameterTypes = method.getGenericParameterTypes();
-		
+
 		Object[] arguments = lookupOrCreateArguments(parameterTypes);
-		
+
 		// no exception was thrown, so let's try to invoke the method
 		return method.invoke(pojo, arguments);
 	}
-	
+
 }
