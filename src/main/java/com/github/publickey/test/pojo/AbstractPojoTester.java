@@ -70,15 +70,34 @@ public abstract class AbstractPojoTester {
 	}
 
 	/**
-	 * Call from subclass
+	 * To be invoked from the unit test. This method will attempt to construct
+	 * the instance of the given class by attempting to generate dependent
+	 * constructor arguments.
 	 * 
+	 * Use {@link #testPojo(Class, Object, String...)} in case an instance
+	 * cannot be auto-generated
+	 * 
+	 * @param pojoClass
+	 *            Class under test
+	 * @param methods
+	 *            to test in addition to properties
+	 * @param <T>
+	 *            Type of class under test
+	 * @return generated instance of the tested POJO
 	 * @throws InvocationTargetException
+	 *             in case of underlining class throws given exception
 	 * @throws IllegalAccessException
+	 *             in case of underlining class throws given exception
 	 * @throws InstantiationException
+	 *             in case of underlining class throws given exception
 	 * @throws NoSuchMethodException
+	 *             in case of underlining class throws given exception
 	 * @throws IntrospectionException
+	 *             in case of underlining class throws given exception
 	 * @throws SecurityException
+	 *             in case of underlining class throws given exception
 	 * @throws NoSuchFieldException
+	 *             in case of underlining class throws given exception
 	 */
 	protected <T> T testPojo(Class<T> pojoClass, String... methods)
 			throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException,
@@ -96,11 +115,22 @@ public abstract class AbstractPojoTester {
 	}
 
 	/**
-	 * Invoke all constructors and specified methods
+	 * To be invoked from the unit test. This method will attempt to construct
+	 * all constructor instances of the given class by attempting to generate
+	 * dependent constructor arguments.
+	 * 
+	 * Use {@link #testPojo(Class, Object, String...)} in case an instance
+	 * cannot be auto-generated
 	 * 
 	 * @param pojoClass
-	 * @param invokeMethods
+	 *            Class under test
+	 * @param methods
+	 *            to test in addition to properties
+	 * @param <T>
+	 *            Type of class under test
+	 * @return all generated instances of the tested POJOs
 	 * @throws Exception
+	 *             in case of underlining class throws given exception
 	 */
 	@SuppressWarnings("unchecked")
 	protected <T> T[] testPojoAllConstructors(Class<T> pojoClass, String... methods) throws Exception {
@@ -165,16 +195,25 @@ public abstract class AbstractPojoTester {
 	 * to invoke all specified methods
 	 * 
 	 * @param pojoClass
+	 *            Class under test
 	 * @param pojoInstance
-	 * @param invokeMethods
+	 *            Instant under test
+	 * @param methods
+	 *            to test in addition to properties
 	 * @throws IntrospectionException
-	 * @throws SecurityException
+	 *             in case of underlining class throws given exception
 	 * @throws NoSuchFieldException
-	 * @throws InvocationTargetException
-	 * @throws IllegalAccessException
+	 *             in case of underlining class throws given exception
+	 * @throws SecurityException
+	 *             in case of underlining class throws given exception
 	 * @throws InstantiationException
+	 *             in case of underlining class throws given exception
+	 * @throws IllegalAccessException
+	 *             in case of underlining class throws given exception
+	 * @throws InvocationTargetException
+	 *             in case of underlining class throws given exception
 	 * @throws NoSuchMethodException
-	 * @throws Exception
+	 *             in case of underlining class throws given exception
 	 */
 	protected void testPojo(Class<?> pojoClass, Object pojoInstance, String... methods)
 			throws IntrospectionException, NoSuchFieldException, SecurityException, InstantiationException,
